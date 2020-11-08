@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Catálogo de Filmes</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<script src="xmltojson.js"></script>
+	<script>
+		function getFilmes(){
+			let xmlHttp = new XMLHttpRequest();
+			xmlHttp.open('GET','http://localhost/ajax/filmes.json');
+
+			xmlHttp.onreadystatechange = () => {
+				if (xmlHttp.readyState == 4 && xmlHttp.status == 200) {
+					let JSONFilmes = xmlHttp.responseText
+					//console.log(JSONFilmes);
+
+					let objJSONFilmes = JSON.parse(JSONFilmes);
+
+					console.log(objJSONFilmes);
+
+					for(let i in objJSONFilmes.filmes){
+						let item = objJSONFilmes.filmes[i];
+						console.log(item)
+
+						
+						let divRow = document.createElement('div')
+						divRow.className = 'row';
+
+						let divCol = document.createElement('div');
+						divCol.className = 'col';
+
+						let img = document.createElement('img');
+						img.src = 'Avengers_Infinity_War.jpg'
+
+						let p1 = document.createElement('p');
+						p1.innerHTML = '<strong>Titulo </strong>' + item.titulo
+
+						let p2 = document.createElement('p');
+						p2.innerHTML = '<strong>Resumo </strong>' + item.resumo
+
+						let genero = '';
+						for(let g in item.generos){
+							if (genero) genero += ', '
+
+							genero += item.generos[g].genero
+						}
+						let p3 = document.createElement('p');
+						p3.innerHTML = '<strong>Gênero </strong>' + genero
+
+						let elenco = '';
+						for(let e in item.elenco){
+							if (elenco) elenco += ', '
+
+							elenco += item.elenco[e].ator
+						}
+						let p4 = document.createElement('p');
+						p4.innerHTML = '<strong>Elenco </strong>' + elenco
+
+						let p5 = document.createElement('p');
+						p5.innerHTML = '<strong>Data de lançamento </strong>' + item.dataLancamento.data + ' (' + item.dataLancamento.pais +')'
+
+						let hr = document.createElement('hr');
+
+						divRow.appendChild(img);
+						divRow.appendChild(divCol);
+						divCol.appendChild(p1);
+						divCol.appendChild(p2);
+						divCol.appendChild(p3);
+						divCol.appendChild(p4);
+						divCol.appendChild(p5);
+						divCol.appendChild(hr);
+
+						document.getElementById('lista').appendChild(divRow);
+					
+					}
+			         
+				}
+
+				if (xmlHttp.readyState == 4 && xmlHttp.status == 404) {
+					//...
+				}
+			}
+			xmlHttp.send()
+		}
+
+		async function getFilmes2(){
+			let apiKey = 'bd5ea292e6e0c50a8b1a4ba63e48a889'
+
+			const pathImg= 'http://image.tmdb.org/t/p/w500/'
+
+			let gen = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${apiKey}&language=en-US`,{method: 'GET'}).then(r => r.json())
+
+			let pesquisa = document.getElementById('pesq').value
+
+			let filmes = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&query=${pesquisa}`, {method: 'GET'}).then((resp) => resp.json()
+			)
+
+			console.log(filmes)
+
+			
+			filmes = filmes.results.map((filme) => {
+				return {
+					titulo: filme.title, 
+					resumo: filme.overview,
+					generos: filme.genre_ids,
+					image: filme.poster_path,
+					dataLancamento: filme.release_date
+				}
+			}) 
+
+			document.getElementById('lista').innerHTML = ''
+			filmes.forEach((filme) => {
+
+				if(filme.image != null){
+					let item = filme
+
+					let divRow = document.createElement('div')
+					divRow.className = 'row';
+
+					let divRow2 = document.createElement('div')
+					divRow2.className = 'row border-top mt-4 mb-0 border-secondary';
+
+					let divCol = document.createElement('div');
+					divCol.className = 'col d-flex align-items-center';
+
+					let divCol2 = document.createElement('div');
+					divCol2.className = 'col-auto d-flex align-items-center';
+		
+					let img = document.createElement('img');
+					img.src = pathImg + filme.image
+					img.setAttribute('style', 'heigth: 250px; width: 150px')
+
+					let container = document.createElement('div')
+					
+
+					let p1 = document.createElement('p');
+					p1.innerHTML = '<strong>Titulo </strong>' + item.titulo
+
+					let p2 = document.createElement('p');
+					p2.innerHTML = '<strong>Resumo </strong>' + item.resumo
+
+					let genero = '';
+					for(let g in item.generos){
+						if (genero) genero += ', '
+
+						genero += item.generos[g].genero
+					}
+					let p3 = document.createElement('p');
+					p3.innerHTML = '<strong>Gênero </strong>' + genero
+
+					/*let elenco = '';
+					for(let e in item.elenco){
+						if (elenco) elenco += ', '
+
+						elenco += item.elenco[e].ator
+					}
+					let p4 = document.createElement('p');
+					p4.innerHTML = '<strong>Elenco </strong>' + elenco*/
+
+					let p5 = document.createElement('p');
+					p5.innerHTML = '<strong>Data de lançamento </strong>' + item.dataLancamento.replaceAll('-','/')
+
+					let hr = document.createElement('hr');
+
+					divCol2.appendChild(img);
+					
+					divRow.appendChild(divCol2);
+					divRow.appendChild(divCol);
+					container.appendChild(p1);
+					container.appendChild(p2);
+					container.appendChild(p3);
+					//divCol.appendChild(p4);
+					container.appendChild(p5);
+					divCol.appendChild(container)
+					divRow2.append(hr);
+
+					document.getElementById('lista').appendChild(divRow);
+					document.getElementById('lista').appendChild(divRow2);
+				}
+			})
+						//console.log(item)
+
+
+					
+		}
+	</script>
+
+</head>
+<body>
+
+		<nav class="navbar navbar-light bg-light mb-4">
+		<div class="container d-flex justify-content-center">
+			<div class="navbar-brand mb-0 h1">
+				<h3>Catálogo de Filmes</h3>
+			</div>
+		</div>
+	</nav>
+	<div class="row">
+		<div class="col mb-5 d-flex flex-column align-items-center">
+				<input type="text" class="col-2 form-control mb-2" placeholder="Pesquisar" id="pesq">
+				<button type="button" class="btn btn-success" onclick="getFilmes2()">Buscar de Filmes</button>
+		</div>
+	</div>
+	<div class="container" id="lista">
+
+	</div>
+
+</body>
+</html>
